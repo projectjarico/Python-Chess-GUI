@@ -2,6 +2,7 @@ import os
 import pygame
 from chess_board import ChessPiece
 from chess_board import ChessSquare
+from chess_board import ChessBoard
 
 list_of_squares = []
 names_of_squares = []
@@ -27,92 +28,15 @@ def get_square_at(x, y, list = list_of_squares):
         if square.rect.collidepoint(x,y):
             return square
 
-def create_board():
-    #Creates 64 squares
 
-    #names the squares created below
-    files = "abcdefgh"
-    files = list(files)
-    for file in files:
-        for rank in range(1,9):
-            names_of_squares.append(f"{file}{rank}")
-        
-
-    for i in range(8):
-        for j in range(8):
-            x = i * 100
-            y = j * 100
-            square_color = WHITE if (i + j) % 2 == 0 else BLACK
-            name = names_of_squares.pop()
-
-
-        
-            #creates 24 pieces
-            #assigns each piece its square then appends all squares and pieces into their list
-            if y == 100:
-                piece_color = "white"
-                new_piece = ChessPiece(x, y, piece_color,"Pawn")
-                square = ChessSquare(x, y, square_color, name)
-                square.place_piece(new_piece)
-            elif y == 600:
-                piece_color = "black"
-                new_piece = ChessPiece(x, y, piece_color,"Pawn")
-                square = ChessSquare(x, y, square_color, name)
-                square.place_piece(new_piece)
-            elif (x == 0 or x == 700) and (y == 0 or y == 700):
-                if y == 0:
-                    piece_color = "white"
-                else:
-                    piece_color = "black"
-                new_piece = ChessPiece(x, y, piece_color,"Rook")
-                square = ChessSquare(x, y, square_color, name)
-                square.place_piece(new_piece)
-            elif (x == 100 or x == 600) and (y == 0 or y == 700):
-                if y == 0:
-                    piece_color = "white"
-                else:
-                    piece_color = "black"            
-                new_piece = ChessPiece(x, y, piece_color,"Knight")
-                square = ChessSquare(x, y, square_color, name)
-                square.place_piece(new_piece)
-            elif (x == 200 or x == 500) and (y == 0 or y == 700):
-                if y == 0:
-                    piece_color = "white"
-                else:
-                    piece_color = "black"            
-                new_piece = ChessPiece(x, y, piece_color,"Bishop")
-                square = ChessSquare(x, y, square_color, name)
-                square.place_piece(new_piece)
-            elif x == 300 and  (y == 0 or y == 700):
-                if y == 0:
-                    piece_color = "white"
-                else:
-                    piece_color = "black"            
-                new_piece = ChessPiece(x, y, piece_color,"Queen")
-                square = ChessSquare(x, y, square_color, name)
-                square.place_piece(new_piece)
-            elif x == 400 and (y == 0 or y == 700):
-                if y == 0:
-                    piece_color = "white"
-                else:
-                    piece_color = "black"            
-                new_piece = ChessPiece(x, y, piece_color,"King")
-                square = ChessSquare(x, y, square_color, name)
-                square.place_piece(new_piece)
-            else:
-                square = ChessSquare(x, y, square_color, name)
-            list_of_squares.append(square)
-            list_of_pieces.append(new_piece)
-
-
+         
 
 
 class ChessGame:
     """This object creates then manages a game of chess"""
     def __init__(self):
         """create the game, set the board and player clocks. Then start the clocks. """
-        #self.board = ChessBoard()
-        create_board()
+        self.board = ChessBoard()
         self.current_piece = None
         self.transcript = {}
         self.move = 0
@@ -129,6 +53,9 @@ class ChessGame:
         #Get the square the piece is currently on
         current_square = get_square_at(piece.x_pos, piece.y_pos)
 
+        #Get the square where the piece is being move to
+        new_square = get_square_at(x_pos, y_pos)
+
         #remove the piece from the square
         current_square.remove_piece()
 
@@ -136,9 +63,6 @@ class ChessGame:
         piece.rect = pygame.Rect(x_pos, y_pos, 100, 100)
         piece.y_pos = y_pos
         piece.x_pos = x_pos
-
-        #Get the square where the piece is being move to
-        new_square = get_square_at(x_pos, y_pos)
 
         #place the piece onto the new square
         if new_square.current_piece:
