@@ -132,7 +132,8 @@ class ChessGame:
                                 piece.highlight_moves(self.board.list_of_squares, self.board.list_of_pieces)
                                 self.current_piece = piece
 
-                                self.draw_window()                    
+                                self.draw_window()
+                                break                    
 
 
             self.draw_window()

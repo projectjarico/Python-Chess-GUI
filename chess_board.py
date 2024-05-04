@@ -42,9 +42,12 @@ class ChessBoard:
         files = "abcdefgh"
         files = list(files)
         for file in files:
-            for rank in range(1,9):
+            ranks = list(range(1,9))
+            ranks.reverse()
+            for rank in ranks: 
                 names_of_squares.append(f"{file}{rank}")
-            
+
+        print(len(names_of_squares))
 
         for i in range(8):
             for j in range(8):
@@ -114,9 +117,6 @@ class ChessBoard:
                 list_of_squares.reverse()
         return list_of_squares, list_of_pieces
 
-
-
-
 class ChessSquare:
     """Represents a chess square and any relevent info about it"""
     def __init__(self, x, y, color, name, rect = True):
@@ -130,7 +130,7 @@ class ChessSquare:
 
     def __deepcopy__(self):
         # Create a new instance of ChessSquare without copying the rect attribute
-        new_square = ChessSquare(self.x_pos, self.y_pos, self.color, False)
+        new_square = ChessSquare(self.x_pos, self.y_pos, self.color, True)
         return new_square        
 
     def draw(self, win):
@@ -168,18 +168,21 @@ class ChessPiece:
         win.blit(self.piece_image, piece_rect)
 
     def __deepcopy__(self):
-        # Create a new instance of ChessPiece without copying the rect attribute
+        # Create a new instance of ChessPiece
         new_piece = ChessPiece(self.x_pos, self.y_pos, self.color, self.name)
         return new_piece  
 
 
     def highlight_moves(self, list_of_squares, list_of_pieces, temp_boardstate = False):
-        """Called when a chess piece is clicked highlight all the legal moves for the peice clicked"""
+
+        """Called when a chess piece is clicked highlight all the legal moves for the piece clicked"""
+        count = 1
         if self.name == "Pawn":
             direction = 1 if self.color == "white" else -1
             # Check if the square in front of the pawn is empty and highlight it
             if temp_boardstate == False:
-                square = get_square_at(self.x_pos, self.y_pos + direction * 100, list_of_squares)                
+                square = get_square_at(self.x_pos, self.y_pos + direction * 100, list_of_squares)     
+                count += 1           
                 check = self.test_boardstate(square, list_of_squares, list_of_pieces)
                 if check != True and square and square.current_piece is None:
                     square.color = HIGHLIGHT
@@ -189,7 +192,8 @@ class ChessPiece:
             if temp_boardstate == False:
                 if self.y_pos == 100 or self.y_pos == 600:
                     square = get_square_at(self.x_pos, self.y_pos + direction * 200, list_of_squares)
-
+                count += 1
+                     
                 check = self.test_boardstate(square, list_of_squares, list_of_pieces)
                 if  square and square.current_piece is None and check != True:
                     square.color = HIGHLIGHT
@@ -200,12 +204,14 @@ class ChessPiece:
                 #if player move is being considered it checks the legality of the move
                 square1 = get_square_at(self.x_pos - 100, self.y_pos + direction * 100, list_of_squares)
                 square2 = get_square_at(self.x_pos + 100, self.y_pos + direction * 100, list_of_squares)
-                if square1.current_piece and square1.current_piece.color != self.color:
+                if square1 and square1.current_piece and square1.current_piece.color != self.color:
+                    print("Oops #1")
                     check = self.test_boardstate(square1, list_of_squares, list_of_pieces)            
                     if check != True:
                         square.color = HIGHLIGHT
                         
-                if square2.current_piece and square2.current_piece.color != self.color:
+                if square and square2.current_piece and square2.current_piece.color != self.color:
+                    print("Oops #2")
                     check = self.test_boardstate(square1, list_of_squares, list_of_pieces)            
                     if check != True:
                         square.color = HIGHLIGHT
@@ -269,17 +275,24 @@ class ChessPiece:
             square = get_square_at(x_new, y_new, list_of_squares)
             #check if temp_board state
             if temp_boardstate == False:
-                #runs test to see if move would leave you in check
-                check = self.test_boardstate(square, list_of_squares, list_of_pieces)
-                #if not highlights the square
+                #breaks if move is impossible
                 if square is None:
                     break
-                elif square.current_piece is None and check == False:
-                    square.color = HIGHLIGHT
-                    if self.name == "King":
-                        break
+
                 elif square.current_piece and square.current_piece.color == self.color:
                     break
+
+                elif square.current_piece and square.current_piece.color == self.color:
+                    break
+
+                #runs test to see if move would leave you in check
+                else:
+                    check = self.test_boardstate(square, list_of_squares, list_of_pieces)
+
+                if square.current_piece is None and check == False:
+                    square.color = HIGHLIGHT
+                    if self.name == "King":
+                        break                
 
                 elif square.current_piece and square.current_piece.color != self.color and check == False:
                     square.color = HIGHLIGHT
@@ -305,46 +318,56 @@ class ChessPiece:
         
     def test_boardstate(self, square, list_of_squares, list_of_pieces):
         #test new board state for check condition by iterating over enemy pieces
-        #saves the board as it is precheck and resets all highlighted squares            
+        #saves the board as it is precheck and resets all highlighted square       
         current_boardstate = deep_copy_list(list_of_squares)
         current_pieces = deep_copy_list(list_of_pieces)
-        
-        #Testing post capture
-        print("Testing boardstate")
-        test_square = get_square_at(400, 400, current_boardstate)
-        if test_square.current_piece:
-            print(test_square.current_piece.name)
-        if test_square.current_piece and test_square.current_piece.name == "Queen":
-            print("Starting Bishop test")
-
-
-        #removes any highlighted squares
-        for square in current_boardstate:
-            square.color = WHITE if ((square.x_pos / 100) + (square.y_pos / 100)) % 2 == 0 else BLACK
-        
-        #Get the square the piece is currently on
-        current_square = get_square_at(self.x_pos, self.y_pos, current_boardstate)
-
-
-        #Update the position of the piece
-        self.rect = pygame.Rect(self.x_pos, self.y_pos, 100, 100)
-        self.y_pos = self.y_pos
-        self.x_pos = self.x_pos
-
-        #Removes enemy piece
-        if square.current_piece: 
-            square.capture_piece()
-
 
         #place all pieces onto their squares
         #So current boardstate has pieces on it
         for piece in current_pieces:
-            square = get_square_at(piece.x_pos, piece.y_pos, current_boardstate)
-            square.place_piece(piece)
+            new_square = get_square_at(piece.x_pos, piece.y_pos, current_boardstate)
+            new_square.place_piece(piece)
+
+        #Get the square the piece is currently on
+        current_square = get_square_at(self.x_pos, self.y_pos, current_boardstate)
+        temp_piece = current_square.current_piece
+
+        #Removes enemy piece
+        if current_square.current_piece: 
+            current_square.capture_piece(current_pieces)
+
+
+        print(square.x_pos, square.y_pos)
+        temp_square = get_square_at(square.x_pos, square.y_pos,current_boardstate)
+        temp_square.place_piece(temp_piece)
+
+
+        #Testing post capture
+        print("Testing boardstate",f"{temp_piece.name}", temp_square.x_pos, temp_square.y_pos)
+        test_square = get_square_at(300, 600, current_boardstate)
+        if test_square == temp_square:
+            print("Testing move to e7")
+
+
+
+        #removes any highlighted squares
+        for temp_square in current_boardstate:
+            temp_square.color = WHITE if ((temp_square.x_pos / 100) + (temp_square.y_pos / 100)) % 2 == 0 else BLACK
+        
+
+
+        #Update the position of the piece
+        temp_piece.rect = pygame.Rect(temp_piece.x_pos, temp_piece.y_pos, 100, 100)
+        temp_piece.y_pos = square.y_pos
+        temp_piece.x_pos = square.x_pos
+
 
 
         #Highlight all enemy moves
         list_of_enemy_moves = []
+        test_square = get_square_at(300, 600, current_boardstate)
+        if test_square.current_piece:
+            print(test_square.current_piece.name)
         for square in current_boardstate:
 
             if square.current_piece != None and square.current_piece.color != self.color:
@@ -368,11 +391,12 @@ class ChessPiece:
         kings_square = get_square_at(my_king.x_pos, my_king.y_pos, current_boardstate)
 
 
-        #returns the piece to its original square
-        self.rect = pygame.Rect(current_square.x_pos, current_square.y_pos, 100, 100)
-        current_square.current_piece = self
+        #destroys the temp piece
+        temp_piece.rect = pygame.Rect(1000, 1000, 100, 100)
+
 
         #tests if the square is highlighted if so it returns in_check = True
+        print(len(list_of_enemy_moves))
         if kings_square in list_of_enemy_moves:
             return True
         else:
