@@ -181,16 +181,17 @@ class ChessPiece:
 
             #If conditions are met highlight moves is called on all enemy pieces with temp_boardstate = True
             if (short_castle_squares[0].current_piece == None) and (short_castle_squares[1].current_piece == None):
-                if self.castle and short_castle_squares[2].current_piece and short_castle_squares[2].current_piece.castle:
+                if self.castle and short_castle_squares[2].current_piece and short_castle_squares[2].current_piece.castle and short_castle_squares[2].current_piece.color == self.color:
                     if temp_boardstate == False:
                         for square in list_of_squares:
                             if square.current_piece and square.current_piece.color != self.color:
                                 square.current_piece.highlight_moves(list_of_squares, list_of_pieces, True)
                         if short_castle_squares[0].color != HIGHLIGHT and short_castle_squares[1].color != HIGHLIGHT and short_castle_squares[2].color != HIGHLIGHT:
+                            print("Surly not")
                             castle_short = True
 
             if long_castle_squares[0].current_piece == None and long_castle_squares[1].current_piece == None and long_castle_squares[2].current_piece == None:
-                if self.castle and long_castle_squares[3].current_piece and long_castle_squares[3].current_piece.castle == True:
+                if self.castle and long_castle_squares[3].current_piece and long_castle_squares[3].current_piece.castle and long_castle_squares[3].current_piece.color == self.color:
                     if temp_boardstate == False:
                         for square in list_of_squares:
                             if square.current_piece:
@@ -223,12 +224,12 @@ class ChessPiece:
             #Check if the square two steps in front of the pawn is empty and highlight it
             if temp_boardstate == False:
                 if self.y_pos == 100 or self.y_pos == 600:
-                    square = get_square_at(self.x_pos, self.y_pos + direction * 200, list_of_squares)
-                count += 1
-                     
-                check = self.test_boardstate(square, list_of_squares, list_of_pieces)
-                if  square and square.current_piece is None and check != True:
-                    square.color = HIGHLIGHT
+                    if self.castle:
+                        square = get_square_at(self.x_pos, self.y_pos + direction * 200, list_of_squares)
+                        
+                        check = self.test_boardstate(square, list_of_squares, list_of_pieces)
+                        if  square and square.current_piece is None and check != True:
+                            square.color = HIGHLIGHT
 
 
             # Check if the diagonally forward squares have opponent's pieces and highlight them
@@ -355,7 +356,7 @@ class ChessPiece:
 
                 #runs test to see if move would leave you in check
                 else:
-                    check = self.test_boardstate(square, list_of_squares, list_of_pieces)
+                    check = self.test_boardstate(square, list_of_squares, list_of_pieces) 
 
                 if square.current_piece is None and check == False:
                     square.color = HIGHLIGHT
@@ -440,7 +441,7 @@ class ChessPiece:
 
 
         #Gets position of friendly king
-        for square in list_of_squares:
+        for square in current_boardstate:
             if square.current_piece and square.current_piece.name == "King" and square.current_piece.color == self.color:
                 my_king = square.current_piece
 
