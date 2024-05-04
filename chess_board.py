@@ -27,10 +27,95 @@ def get_square_at(x, y, list_of_squares):
 
 class ChessBoard:
     """This object represents the board and hold info about piece positions and game state"""
-    def __init__(self, chess_squares):
+    def __init__(self):
         """Set the board"""
         self.height = 8
         self.width = 8
+        self.list_of_squares, self.list_of_pieces = self.create_board()
+
+
+    def create_board(self):
+    #Creates 64 squares
+        list_of_squares, list_of_pieces, names_of_squares = [], [], []
+
+        #names the squares created below
+        files = "abcdefgh"
+        files = list(files)
+        for file in files:
+            for rank in range(1,9):
+                names_of_squares.append(f"{file}{rank}")
+            
+
+        for i in range(8):
+            for j in range(8):
+                x = i * 100
+                y = j * 100
+                square_color = WHITE if (i + j) % 2 == 0 else BLACK
+                name = names_of_squares.pop()
+
+
+            
+                #creates 24 pieces
+                #assigns each piece its square then appends all squares and pieces into their list
+                if y == 100:
+                    piece_color = "white"
+                    new_piece = ChessPiece(x, y, piece_color,"Pawn")
+                    square = ChessSquare(x, y, square_color, name)
+                    square.place_piece(new_piece)
+                elif y == 600:
+                    piece_color = "black"
+                    new_piece = ChessPiece(x, y, piece_color,"Pawn")
+                    square = ChessSquare(x, y, square_color, name)
+                    square.place_piece(new_piece)
+                elif (x == 0 or x == 700) and (y == 0 or y == 700):
+                    if y == 0:
+                        piece_color = "white"
+                    else:
+                        piece_color = "black"
+                    new_piece = ChessPiece(x, y, piece_color,"Rook")
+                    square = ChessSquare(x, y, square_color, name)
+                    square.place_piece(new_piece)
+                elif (x == 100 or x == 600) and (y == 0 or y == 700):
+                    if y == 0:
+                        piece_color = "white"
+                    else:
+                        piece_color = "black"            
+                    new_piece = ChessPiece(x, y, piece_color,"Knight")
+                    square = ChessSquare(x, y, square_color, name)
+                    square.place_piece(new_piece)
+                elif (x == 200 or x == 500) and (y == 0 or y == 700):
+                    if y == 0:
+                        piece_color = "white"
+                    else:
+                        piece_color = "black"            
+                    new_piece = ChessPiece(x, y, piece_color,"Bishop")
+                    square = ChessSquare(x, y, square_color, name)
+                    square.place_piece(new_piece)
+                elif x == 400 and  (y == 0 or y == 700):
+                    if y == 0:
+                        piece_color = "white"
+                    else:
+                        piece_color = "black"            
+                    new_piece = ChessPiece(x, y, piece_color,"Queen")
+                    square = ChessSquare(x, y, square_color, name)
+                    square.place_piece(new_piece)
+                elif x == 300 and (y == 0 or y == 700):
+                    if y == 0:
+                        piece_color = "white"
+                    else:
+                        piece_color = "black"            
+                    new_piece = ChessPiece(x, y, piece_color,"King")
+                    square = ChessSquare(x, y, square_color, name)
+                    square.place_piece(new_piece)
+                else:
+                    square = ChessSquare(x, y, square_color, name)
+                list_of_squares.append(square)
+                list_of_pieces.append(new_piece)
+                list_of_squares.reverse()
+        return list_of_squares, list_of_pieces
+
+
+
 
 class ChessSquare:
     """Represents a chess square and any relevent info about it"""
