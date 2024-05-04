@@ -49,6 +49,7 @@ class ChessGame:
 
     def move_piece(self, x_pos, y_pos, piece):
         """Remove piece from current square moves to new square"""
+        piece.castle = False
         #Get the square the piece is currently on
         current_square = get_square_at(piece.x_pos, piece.y_pos, self.board.list_of_squares)
 
@@ -88,10 +89,11 @@ class ChessGame:
             square.color = WHITE if ((square.x_pos / 100) + (square.y_pos / 100)) % 2 == 0 else BLACK
         
         #Updates the size of the piece image
-        self.current_piece.piece_image = pygame.transform.scale(self.current_piece.piece_image, (65, 65))
+        if self.current_piece:
+            self.current_piece.piece_image = pygame.transform.scale(self.current_piece.piece_image, (65, 65))
 
-        #Displays the piece on screen at original size
-        win.blit(self.current_piece.piece_image, self.current_piece.rect)
+            #Displays the piece on screen at original size
+            win.blit(self.current_piece.piece_image, self.current_piece.rect)
         
         #Removes selection from piece
         self.current_piece = None
@@ -120,7 +122,18 @@ class ChessGame:
                         mouse_x, mouse_y = pygame.mouse.get_pos()
                         square = get_square_at(mouse_x, mouse_y, self.board.list_of_squares)
                         if square.color == HIGHLIGHT:
-                            self.move_piece(square.x_pos, square.y_pos, self.current_piece)
+                            #Special case for castling to move 2 pieces at the same time
+                            if self.current_piece.name == "King" and abs(mouse_x - self.current_piece.x_pos) > 100:
+                                if mouse_x < self.current_piece.x_pos:
+                                    castling_rook = get_square_at(self.current_piece.x_pos-300,self.current_piece.y_pos, self.board.list_of_squares)
+                                    self.move_piece(square.x_pos, square.y_pos, self.current_piece)
+                                    self.move_piece(square.x_pos+100, square.y_pos, castling_rook.current_piece)
+                                elif mouse_x > self.current_piece.x_pos:
+                                    castling_rook = get_square_at(self.current_piece.x_pos+400,self.current_piece.y_pos, self.board.list_of_squares)
+                                    self.move_piece(square.x_pos, square.y_pos, self.current_piece)
+                                    self.move_piece(square.x_pos-100, square.y_pos, castling_rook.current_piece)
+                            else:
+                                self.move_piece(square.x_pos, square.y_pos, self.current_piece)
                         elif square.color != HIGHLIGHT:
                             self.reset_selection()
                     

@@ -47,8 +47,6 @@ class ChessBoard:
             for rank in ranks: 
                 names_of_squares.append(f"{file}{rank}")
 
-        print(len(names_of_squares))
-
         for i in range(8):
             for j in range(8):
                 x = i * 100
@@ -160,6 +158,7 @@ class ChessPiece:
         self.x_pos = x_pos
         self.y_pos = y_pos
         self.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.color}_{self.name}.PNG")
+        self.castle = True
         self.rect = pygame.Rect(x_pos, y_pos, 100, 100)
 
     def draw_piece(self, win, scale_factor = 1.5):
@@ -172,12 +171,45 @@ class ChessPiece:
         new_piece = ChessPiece(self.x_pos, self.y_pos, self.color, self.name)
         return new_piece  
 
+    def check_castling(self, list_of_squares, list_of_pieces, temp_boardstate=False):
+        castle_short= False
+        castle_long = False        
+        if self.castle == True and temp_boardstate == False:
+            #Grabs relevent squares for castling short and long.
+            short_castle_squares = (get_square_at(self.x_pos-100, self.y_pos, list_of_squares), get_square_at(self.x_pos-200, self.y_pos, list_of_squares), get_square_at(self.x_pos-300,self.y_pos,list_of_squares))
+            long_castle_squares = (get_square_at(self.x_pos+100, self.y_pos, list_of_squares), get_square_at(self.x_pos+200, self.y_pos, list_of_squares), get_square_at(self.x_pos+300,self.y_pos,list_of_squares), get_square_at(self.x_pos+400, self.y_pos, list_of_squares))
+
+            #If conditions are met highlight moves is called on all enemy pieces with temp_boardstate = True
+            if (short_castle_squares[0].current_piece == None) and (short_castle_squares[1].current_piece == None):
+                if self.castle and short_castle_squares[2].current_piece and short_castle_squares[2].current_piece.castle:
+                    if temp_boardstate == False:
+                        for square in list_of_squares:
+                            if square.current_piece and square.current_piece.color != self.color:
+                                square.current_piece.highlight_moves(list_of_squares, list_of_pieces, True)
+                        if short_castle_squares[0].color != HIGHLIGHT and short_castle_squares[1].color != HIGHLIGHT and short_castle_squares[2].color != HIGHLIGHT:
+                            castle_short = True
+
+            if long_castle_squares[0].current_piece == None and long_castle_squares[1].current_piece == None and long_castle_squares[2].current_piece == None:
+                if self.castle and long_castle_squares[3].current_piece and long_castle_squares[3].current_piece.castle == True:
+                    if temp_boardstate == False:
+                        for square in list_of_squares:
+                            if square.current_piece:
+                                square.current_piece.highlight_moves(list_of_squares, list_of_pieces, True)
+                    
+                        if long_castle_squares[0] != HIGHLIGHT and long_castle_squares[1] != HIGHLIGHT and long_castle_squares[2] != HIGHLIGHT and long_castle_squares[3] != HIGHLIGHT:
+                            castle_long = True
+        
+        print(f"castle short = {castle_short}", f"castle long = {castle_long}")
+        return castle_short, castle_long
+
+
 
     def highlight_moves(self, list_of_squares, list_of_pieces, temp_boardstate = False):
 
         """Called when a chess piece is clicked highlight all the legal moves for the piece clicked"""
         count = 1
         if self.name == "Pawn":
+            pawn_moves = [(100, 100),(-100, 100)] if self.color == "white" else [(100, -100),(-100, -100)]
             direction = 1 if self.color == "white" else -1
             # Check if the square in front of the pawn is empty and highlight it
             if temp_boardstate == False:
@@ -201,20 +233,12 @@ class ChessPiece:
 
             # Check if the diagonally forward squares have opponent's pieces and highlight them
             if temp_boardstate == False:
-                #if player move is being considered it checks the legality of the move
-                square1 = get_square_at(self.x_pos - 100, self.y_pos + direction * 100, list_of_squares)
-                square2 = get_square_at(self.x_pos + 100, self.y_pos + direction * 100, list_of_squares)
-                if square1 and square1.current_piece and square1.current_piece.color != self.color:
-                    print("Oops #1")
-                    check = self.test_boardstate(square1, list_of_squares, list_of_pieces)            
-                    if check != True:
-                        square.color = HIGHLIGHT
-                        
-                if square and square2.current_piece and square2.current_piece.color != self.color:
-                    print("Oops #2")
-                    check = self.test_boardstate(square1, list_of_squares, list_of_pieces)            
-                    if check != True:
-                        square.color = HIGHLIGHT
+                for x, y in pawn_moves:
+                    square = get_square_at(self.x_pos+x, self.y_pos+y, list_of_squares)
+                    if square and square.current_piece and square.current_piece.color != self.color:
+                        check = self.test_boardstate(square, list_of_squares, list_of_pieces)            
+                        if check != True:
+                            square.color = HIGHLIGHT
 
             else:
                 #if enemy move is being considered it hightlights all possible moves
@@ -225,7 +249,35 @@ class ChessPiece:
                 if square and square.current_piece and square.current_piece.color != self.color:
                     square.color = HIGHLIGHT
 
+        if self.name == "Knight":
+            list_of_knight_moves = [(200, 100),(200,-100),(-200,100),(-200,-100),(100,200),(-100,200),(100,-200),(-100,-200)]
+            for x, y in list_of_knight_moves:
+                square = get_square_at(self.x_pos+x, self.y_pos+y, list_of_squares)
 
+                if square:
+                    if temp_boardstate == True:
+                        square.color = HIGHLIGHT
+                    else:
+                        if square.current_piece:
+                            if square.current_piece.color != self.color:
+                                if temp_boardstate == False:
+                                    check = self.test_boardstate(square, list_of_squares, list_of_pieces)
+                                if check == False:
+                                    square.color = HIGHLIGHT
+                        else:
+                            if temp_boardstate == False:
+                                check = self.test_boardstate(square, list_of_squares, list_of_pieces)
+                                if check == False:
+                                    square.color = HIGHLIGHT
+                            
+
+            square = get_square_at(self.x_pos, self.y_pos, list_of_squares)
+            square = get_square_at(self.x_pos, self.y_pos, list_of_squares)
+            square = get_square_at(self.x_pos, self.y_pos, list_of_squares)
+            square = get_square_at(self.x_pos, self.y_pos, list_of_squares)
+            square = get_square_at(self.x_pos, self.y_pos, list_of_squares)
+            square = get_square_at(self.x_pos, self.y_pos, list_of_squares)
+            square = get_square_at(self.x_pos, self.y_pos, list_of_squares)
         if self.name == "Rook":
             """Uses a while loop to continue highlighting squares until it hits an obstacle"""
             self.hightlight_squares_in_direction(0, 1, list_of_squares, temp_boardstate, list_of_pieces) #Up
@@ -252,6 +304,22 @@ class ChessPiece:
             self.hightlight_squares_in_direction(1, 0, list_of_squares, temp_boardstate, list_of_pieces) 
 
         if self.name == "King":
+            if temp_boardstate == False:
+                castle_short, castle_long = self.check_castling(list_of_squares, list_of_pieces, temp_boardstate=False)
+                short_square = get_square_at(self.x_pos-200, self.y_pos, list_of_squares)
+                long_square = get_square_at(self.x_pos+200, self.y_pos, list_of_squares)
+            
+
+                for square in list_of_squares:
+                  square.color = WHITE if ((square.x_pos / 100) + (square.y_pos / 100)) % 2 == 0 else BLACK
+
+                if castle_short == True:
+                    short_square.color = HIGHLIGHT
+            
+                if castle_long == True:
+                    long_square.color = HIGHLIGHT
+
+
             "Uses a while loop to continue highlighting squares until it hits an obstacle"
             self.hightlight_squares_in_direction(1, 1, list_of_squares, temp_boardstate, list_of_pieces)
             self.hightlight_squares_in_direction(1, -1, list_of_squares, temp_boardstate, list_of_pieces)
@@ -337,16 +405,8 @@ class ChessPiece:
             current_square.capture_piece(current_pieces)
 
 
-        print(square.x_pos, square.y_pos)
         temp_square = get_square_at(square.x_pos, square.y_pos,current_boardstate)
         temp_square.place_piece(temp_piece)
-
-
-        #Testing post capture
-        print("Testing boardstate",f"{temp_piece.name}", temp_square.x_pos, temp_square.y_pos)
-        test_square = get_square_at(300, 600, current_boardstate)
-        if test_square == temp_square:
-            print("Testing move to e7")
 
 
 
@@ -365,9 +425,6 @@ class ChessPiece:
 
         #Highlight all enemy moves
         list_of_enemy_moves = []
-        test_square = get_square_at(300, 600, current_boardstate)
-        if test_square.current_piece:
-            print(test_square.current_piece.name)
         for square in current_boardstate:
 
             if square.current_piece != None and square.current_piece.color != self.color:
@@ -396,7 +453,6 @@ class ChessPiece:
 
 
         #tests if the square is highlighted if so it returns in_check = True
-        print(len(list_of_enemy_moves))
         if kings_square in list_of_enemy_moves:
             return True
         else:
