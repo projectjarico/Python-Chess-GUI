@@ -141,7 +141,7 @@ class ChessGame:
 
                             
                             #Special case for promotion
-                            elif self.current_piece.name == "Pawn" and square.y_pos == 0 or square.y_pos == 700:
+                            elif self.current_piece.name == "Pawn" and (square.y_pos == 0 or square.y_pos == 700):
                                 print("Me on my way to promote")
                                 choice = input("What piece would you like to promote? Enter 'Q', 'R', 'B', or 'K'")
                                 if choice.lower() == "q":
