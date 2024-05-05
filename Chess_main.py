@@ -23,6 +23,8 @@ def get_square_at(x, y, squares):
     for square in squares:
         if square.rect.collidepoint(x,y):
             return square     
+        else:
+            return None
 
 class ChessGame:
     """This object creates then manages a game of chess"""
@@ -91,6 +93,38 @@ class ChessGame:
         #Removes selection from piece
         self.current_piece = None
 
+    def castle(self, square, mouse_x):
+        """Special case for castling moves rook and king"""
+        if mouse_x < self.current_piece.x_pos:
+            castling_rook = get_square_at(self.current_piece.x_pos-300,self.current_piece.y_pos, self.board.list_of_squares)
+            self.move_piece(square.x_pos, square.y_pos, self.current_piece)
+            self.move_piece(square.x_pos+100, square.y_pos, castling_rook.current_piece, castle=True)
+        elif mouse_x > self.current_piece.x_pos:
+            castling_rook = get_square_at(self.current_piece.x_pos+400,self.current_piece.y_pos, self.board.list_of_squares)
+            self.move_piece(square.x_pos, square.y_pos, self.current_piece)
+            self.move_piece(square.x_pos-100, square.y_pos, castling_rook.current_piece, castle=True)
+
+    def promotion(self, square):
+        choice = input("What piece would you like to promote? Enter 'Q', 'R', 'B', or 'K'")
+        if choice.lower() == "q":
+            self.current_piece.name = "Queen"
+            self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
+        elif choice.lower() == "r":
+            self.current_piece.name = "Rook"
+            self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
+        elif choice.lower() == "b":
+            self.current_piece.name = "Bishop"
+            self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
+        elif choice.lower() == "k":
+            self.current_piece.name = "Knight"
+            self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
+        else:
+            self.current_piece.name = "Queen"
+            self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
+        
+        self.move_piece(square.x_pos, square.y_pos, self.current_piece)
+        self.draw_window()
+
 
     def draw_window(self):
         """Draws the squares onto the blank template"""
@@ -115,42 +149,15 @@ class ChessGame:
                         mouse_x, mouse_y = pygame.mouse.get_pos()
                         square = get_square_at(mouse_x, mouse_y, self.board.list_of_squares)
                         if square.color == HIGHLIGHT:
-                            print("surly we are getting here")
                             print(self.current_piece, square.x_pos, square.y_pos)
                             #Special case for castling to move 2 pieces at the same time
-                            if self.current_piece.name == "King" and abs(mouse_x - self.current_piece.x_pos) > 100:
-                                if mouse_x < self.current_piece.x_pos:
-                                    castling_rook = get_square_at(self.current_piece.x_pos-300,self.current_piece.y_pos, self.board.list_of_squares)
-                                    self.move_piece(square.x_pos, square.y_pos, self.current_piece)
-                                    self.move_piece(square.x_pos+100, square.y_pos, castling_rook.current_piece, castle=True)
-                                elif mouse_x > self.current_piece.x_pos:
-                                    castling_rook = get_square_at(self.current_piece.x_pos+400,self.current_piece.y_pos, self.board.list_of_squares)
-                                    self.move_piece(square.x_pos, square.y_pos, self.current_piece)
-                                    self.move_piece(square.x_pos-100, square.y_pos, castling_rook.current_piece, castle=True)
-
+                            if self.current_piece.name == "King" and abs(mouse_x-self.current_piece.x_pos) > 100:
+                                self.castle(square, mouse_x)
                             
                             #Special case for promotion
                             elif self.current_piece.name == "Pawn" and square.y_pos in (0,700):
-                                print("Me on my way to promote")
-                                choice = input("What piece would you like to promote? Enter 'Q', 'R', 'B', or 'K'")
-                                if choice.lower() == "q":
-                                    self.current_piece.name = "Queen"
-                                    self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
-                                elif choice.lower() == "r":
-                                    self.current_piece.name = "Rook"
-                                    self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
-                                elif choice.lower() == "b":
-                                    self.current_piece.name = "Bishop"
-                                    self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
-                                elif choice.lower() == "k":
-                                    self.current_piece.name = "Knight"
-                                    self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
-                                else:
-                                    self.current_piece.name = "Queen"
-                                    self.current_piece.piece_image = pygame.image.load(f"c:\\Users\\Jack\\Chess\\{self.current_piece.color}_{self.current_piece.name}.PNG")
-                                
-                                self.move_piece(square.x_pos, square.y_pos, self.current_piece)
-                                self.draw_window()
+                                self.promotion(square)
+                            
                             else:
                                 self.move_piece(square.x_pos, square.y_pos, self.current_piece)
                         elif square.color != HIGHLIGHT:
