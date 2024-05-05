@@ -1,7 +1,4 @@
-import os
 import pygame
-from chess_board import ChessPiece
-from chess_board import ChessSquare
 from chess_board import ChessBoard
 
 names_of_squares = []
@@ -22,14 +19,10 @@ black_square = pygame.transform.scale(black_square,(100,100))
 width, height = 800, 800
 win = pygame.display.set_mode((width, height))
 
-def get_square_at(x, y, list):
-    for square in list:
+def get_square_at(x, y, squares):
+    for square in squares:
         if square.rect.collidepoint(x,y):
-            return square
-
-
-         
-
+            return square     
 
 class ChessGame:
     """This object creates then manages a game of chess"""
@@ -74,24 +67,20 @@ class ChessGame:
 
         #Reset selection and redraw the window
         self.reset_selection()
-        if castle == False:
+        if castle is False:
             self.player_turn = "black" if self.player_turn == "white" else "white"
-
-        self.draw_window
-
 
     def add_boardstate(self):
         """indexs the most recent move into the transcript dictionary"""
         current_board = self.board.list_of_squares[:]
         self.transcript[f"{self.move}"] = current_board
-        self.move += 1
-
-        
+        self.move += 1    
 
     def reset_selection(self):
+        """Removes highlight from squares and sets self.current piece to none"""
         for square in self.board.list_of_squares:
             square.color = WHITE if ((square.x_pos / 100) + (square.y_pos / 100)) % 2 == 0 else BLACK
-        
+       
         #Updates the size of the piece image
         if self.current_piece:
             self.current_piece.piece_image = pygame.transform.scale(self.current_piece.piece_image, (65, 65))
@@ -141,7 +130,7 @@ class ChessGame:
 
                             
                             #Special case for promotion
-                            elif self.current_piece.name == "Pawn" and (square.y_pos == 0 or square.y_pos == 700):
+                            elif self.current_piece.name == "Pawn" and square.y_pos in (0,700):
                                 print("Me on my way to promote")
                                 choice = input("What piece would you like to promote? Enter 'Q', 'R', 'B', or 'K'")
                                 if choice.lower() == "q":
@@ -187,9 +176,3 @@ class ChessGame:
 
 current_game = ChessGame()
 current_game.draw_window()
-
-
-
-
-if __name__ == "__Chess_main__":
-    main()
