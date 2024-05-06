@@ -20,9 +20,10 @@ width, height = 800, 800
 win = pygame.display.set_mode((width, height))
 
 def get_square_at(x, y, squares):
+    """find square from list of square and coords"""
     for square in squares:
         if square.rect.collidepoint(x,y):
-            return square     
+            return square
 
 
 class ChessGame:
@@ -33,12 +34,11 @@ class ChessGame:
         self.current_piece = None
         self.transcript = {}
         self.move = 0
-        self.add_boardstate()    
+        self.add_boardstate()
         self.player_turn = "w"
 
         #self.clocks = ChessClock()
         #self.clocks.begin()
-
 
         self.main()
 

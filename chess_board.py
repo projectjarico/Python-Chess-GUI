@@ -180,17 +180,23 @@ class ChessPiece:
 
     def check_castle(self, l_o_s, l_o_p, castling_moves):
         """Handles short castle checks"""
+        #4 early checks before move highlight
         if not self.castle:
             return False
         rook_square = castling_moves[-1]
+
+        if all(square.current_piece for square in castling_moves[:-1]):
+            return False
+        if not rook_square.current_piece:
+            return False
         if rook_square.current_piece.name != "Rook" or not rook_square.current_piece.castle:
             return False
+        
+        #Highlights all enemy moves
         for square in l_o_s:
             if square.current_piece and square.current_piece.color != self.color:
                 square.current_piece.highlight_moves(l_o_s, l_o_p, True)
-        if all(square.color is HIGHLIGHT for square in castling_moves[:-1]):
-            for square in self.board.l_o_s:
-                square.color = WHITE if ((square.x_pos / 100) + (square.y_pos / 100)) % 2 == 0 else BLACK
+        if all(square.color is not HIGHLIGHT for square in castling_moves[:-1]):
             return True
 
     def check_castling(self, l_o_s, l_o_p):
@@ -224,14 +230,13 @@ class ChessPiece:
                 check = self.test_boardstate(square, l_o_s, l_o_p)
                 if check is not True and square and square.current_piece is None:
                     square.color = HIGHLIGHT
- 
+
 
             #Check if the square two steps in front of the pawn is empty and highlight it
             if temp_boardstate is False:
                 if self.y_pos == 100 or self.y_pos == 600:
                     if self.castle:
                         square = get_square_at(self.x_pos, self.y_pos + direction * 200, l_o_s)
-                        
                         check = self.test_boardstate(square, l_o_s, l_o_p)
                         if  square and square.current_piece is None and check != True:
                             square.color = HIGHLIGHT
@@ -242,17 +247,17 @@ class ChessPiece:
                 for x, y in pawn_moves:
                     square = get_square_at(self.x_pos+x, self.y_pos+y, l_o_s)
                     if square and square.current_piece and square.current_piece.color != self.color:
-                        check = self.test_boardstate(square, l_o_s, l_o_p)            
+                        check = self.test_boardstate(square, l_o_s, l_o_p)
                         if check is not True:
                             square.color = HIGHLIGHT
 
             else:
                 #if enemy move is being considered it hightlights all possible moves
-                square = get_square_at(self.x_pos - 100, 
-                                       self.y_pos + direction * 100, l_o_s)      
+                square = get_square_at(self.x_pos - 100,
+                                       self.y_pos + direction * 100, l_o_s)
                 if square and square.current_piece and square.current_piece.color != self.color:
                     square.color = HIGHLIGHT
-                square = get_square_at(self.x_pos + 100, 
+                square = get_square_at(self.x_pos + 100,
                                        self.y_pos + direction * 100, l_o_s)
                 if square and square.current_piece and square.current_piece.color != self.color:
                     square.color = HIGHLIGHT
@@ -278,49 +283,34 @@ class ChessPiece:
                                 check = self.test_boardstate(square, l_o_s, l_o_p)
                                 if check is False:
                                     square.color = HIGHLIGHT
-                            
 
-            square = get_square_at(self.x_pos, self.y_pos, l_o_s)
-            square = get_square_at(self.x_pos, self.y_pos, l_o_s)
-            square = get_square_at(self.x_pos, self.y_pos, l_o_s)
-            square = get_square_at(self.x_pos, self.y_pos, l_o_s)
-            square = get_square_at(self.x_pos, self.y_pos, l_o_s)
-            square = get_square_at(self.x_pos, self.y_pos, l_o_s)
-            square = get_square_at(self.x_pos, self.y_pos, l_o_s)
         if self.name == "Rook":
             #Uses a while loop to continue highlighting squares until it hits an obstacle
-            self.hightlight_squares_in_direction(0, 1, l_o_s, temp_boardstate, l_o_p) #Up
-            self.hightlight_squares_in_direction(0, -1, l_o_s, temp_boardstate, l_o_p) #Down
-            self.hightlight_squares_in_direction(-1, 0, l_o_s, temp_boardstate, l_o_p) #Left
-            self.hightlight_squares_in_direction(1, 0, l_o_s, temp_boardstate, l_o_p) #Right
+            rook_directions = [(0,1),(0,-1),(1,0),(-1,0)]
+            for dr in rook_directions:
+                self.hightlight_squares_in_direction(dr[0], dr[1], l_o_s, temp_boardstate, l_o_p)
 
         if self.name == "Bishop":
             #Uses a while loop to continue highlighting squares until it hits an obstacle
-            self.hightlight_squares_in_direction(1, 1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(1, -1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(-1, 1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(-1, -1, l_o_s, temp_boardstate, l_o_p)
+            biship_directions = [(1,1),(1,-1),(-1,-1),(-1,1)]
+            for dr in biship_directions:
+                self.hightlight_squares_in_direction(dr[0], dr[1], l_o_s, temp_boardstate, l_o_p)
 
         if self.name == "Queen":
             #Uses a while loop to continue highlighting squares until it hits an obstacle
-            self.hightlight_squares_in_direction(1, 1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(1, -1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(-1, 1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(-1, -1, l_o_s, temp_boardstate, l_o_p)            
-            self.hightlight_squares_in_direction(0, 1, l_o_s, temp_boardstate, l_o_p) 
-            self.hightlight_squares_in_direction(0, -1, l_o_s, temp_boardstate, l_o_p) 
-            self.hightlight_squares_in_direction(-1, 0, l_o_s, temp_boardstate, l_o_p) 
-            self.hightlight_squares_in_direction(1, 0, l_o_s, temp_boardstate, l_o_p) 
-
+            king_and_queen_directions = [(1,1),(1,0),(1,-1),(-1,1),(-1,-1),(-1,0),(0,1),(0,-1)]
+            for dr in king_and_queen_directions:
+                self.hightlight_squares_in_direction(dr[0], dr[1], l_o_s, temp_boardstate, l_o_p)
         if self.name == "King":
             if temp_boardstate is False:
-                print("Me about to break the board")
-                for square in l_o_s:
-                    print(square.color)
                 castle_short, castle_long = self.check_castling(l_o_s, l_o_p)
                 short_square = get_square_at(self.x_pos-200, self.y_pos, l_o_s)
                 long_square = get_square_at(self.x_pos+200, self.y_pos, l_o_s)
- 
+
+                for square in l_o_s:
+                    square_color = WHITE if (square.x_pos + square.y_pos)/100 % 2 == 0 else BLACK
+                    square.color = square_color
+
                 if castle_short is True:
                     short_square.color = HIGHLIGHT
                 if castle_long is True:
@@ -328,14 +318,9 @@ class ChessPiece:
 
 
             #Uses a while loop to continue highlighting squares until it hits an obstacle
-            self.hightlight_squares_in_direction(1, 1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(1, -1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(-1, 1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(-1, -1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(0, 1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(0, -1, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(-1, 0, l_o_s, temp_boardstate, l_o_p)
-            self.hightlight_squares_in_direction(1, 0, l_o_s, temp_boardstate, l_o_p)
+            king_and_queen_directions = [(1,1),(1,0),(1,-1),(-1,1),(-1,-1),(-1,0),(0,1),(0,-1)]
+            for dr in king_and_queen_directions:
+                self.hightlight_squares_in_direction(dr[0], dr[1], l_o_s, temp_boardstate, l_o_p)
 
     def hightlight_squares_in_direction(self, dx, dy, l_o_s, temp_boardstate, l_o_p):
         """Highlights unobstructed moves for bishop, rook, and queen""" 
@@ -443,10 +428,9 @@ class ChessPiece:
         #Gets position of friendly king
         for square in current_boardstate:
             if square.current_piece and square.current_piece.name == "King" and square.current_piece.color == self.color:
-                my_king = square.current_piece
-
-        #gets square king is on
-        kings_square = get_square_at(my_king.x_pos, my_king.y_pos, current_boardstate)
+                kings_square = square
+        if self.name == "King":
+            kings_square = get_square_at(self.x_pos,self.y_pos, l_o_s)
 
 
         #destroys the temp piece
