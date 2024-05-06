@@ -23,8 +23,7 @@ def get_square_at(x, y, squares):
     for square in squares:
         if square.rect.collidepoint(x,y):
             return square     
-        else:
-            return None
+
 
 class ChessGame:
     """This object creates then manages a game of chess"""
@@ -35,7 +34,7 @@ class ChessGame:
         self.transcript = {}
         self.move = 0
         self.add_boardstate()    
-        self.player_turn = "white"
+        self.player_turn = "w"
 
         #self.clocks = ChessClock()
         #self.clocks.begin()
@@ -47,10 +46,10 @@ class ChessGame:
         """Remove piece from current square moves to new square"""
         piece.castle = False
         #Get the square the piece is currently on
-        current_square = get_square_at(piece.x_pos, piece.y_pos, self.board.list_of_squares)
+        current_square = get_square_at(piece.x_pos, piece.y_pos, self.board.l_o_s)
 
         #Get the square where the piece is being move to
-        new_square = get_square_at(x_pos, y_pos, self.board.list_of_squares)
+        new_square = get_square_at(x_pos, y_pos, self.board.l_o_s)
 
         #remove the piece from the square
         current_square.remove_piece()
@@ -62,7 +61,7 @@ class ChessGame:
 
         #place the piece onto the new square
         if new_square.current_piece:
-            new_square.capture_piece(self.board.list_of_pieces)
+            new_square.capture_piece(self.board.l_o_p)
         new_square.place_piece(piece)
 
 
@@ -70,17 +69,17 @@ class ChessGame:
         #Reset selection and redraw the window
         self.reset_selection()
         if castle is False:
-            self.player_turn = "black" if self.player_turn == "white" else "white"
+            self.player_turn = "b" if self.player_turn == "w" else "w"
 
     def add_boardstate(self):
         """indexs the most recent move into the transcript dictionary"""
-        current_board = self.board.list_of_squares[:]
+        current_board = self.board.l_o_s[:]
         self.transcript[f"{self.move}"] = current_board
         self.move += 1    
 
     def reset_selection(self):
         """Removes highlight from squares and sets self.current piece to none"""
-        for square in self.board.list_of_squares:
+        for square in self.board.l_o_s:
             square.color = WHITE if ((square.x_pos / 100) + (square.y_pos / 100)) % 2 == 0 else BLACK
        
         #Updates the size of the piece image
@@ -96,15 +95,17 @@ class ChessGame:
     def castle(self, square, mouse_x):
         """Special case for castling moves rook and king"""
         if mouse_x < self.current_piece.x_pos:
-            castling_rook = get_square_at(self.current_piece.x_pos-300,self.current_piece.y_pos, self.board.list_of_squares)
+            castling_rook = get_square_at(self.current_piece.x_pos-300,self.current_piece.y_pos, self.board.l_o_s)
             self.move_piece(square.x_pos, square.y_pos, self.current_piece)
             self.move_piece(square.x_pos+100, square.y_pos, castling_rook.current_piece, castle=True)
         elif mouse_x > self.current_piece.x_pos:
-            castling_rook = get_square_at(self.current_piece.x_pos+400,self.current_piece.y_pos, self.board.list_of_squares)
+            castling_rook = get_square_at(self.current_piece.x_pos+400,self.current_piece.y_pos, self.board.l_o_s)
             self.move_piece(square.x_pos, square.y_pos, self.current_piece)
             self.move_piece(square.x_pos-100, square.y_pos, castling_rook.current_piece, castle=True)
 
     def promotion(self, square):
+        """Special case when a pawn reached the final rank"""
+        """Recives user input in text form to decide promtion, defualts to queen"""
         choice = input("What piece would you like to promote? Enter 'Q', 'R', 'B', or 'K'")
         if choice.lower() == "q":
             self.current_piece.name = "Queen"
@@ -129,9 +130,9 @@ class ChessGame:
     def draw_window(self):
         """Draws the squares onto the blank template"""
         win.fill(PURPLE)
-        for square in self.board.list_of_squares:
+        for square in self.board.l_o_s:
             square.draw(win)
-        for piece in self.board.list_of_pieces:
+        for piece in self.board.l_o_p:
             piece.draw_piece(win)
 
 
@@ -147,9 +148,8 @@ class ChessGame:
                 if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
                     if self.current_piece:
                         mouse_x, mouse_y = pygame.mouse.get_pos()
-                        square = get_square_at(mouse_x, mouse_y, self.board.list_of_squares)
+                        square = get_square_at(mouse_x, mouse_y, self.board.l_o_s)
                         if square.color == HIGHLIGHT:
-                            print(self.current_piece, square.x_pos, square.y_pos)
                             #Special case for castling to move 2 pieces at the same time
                             if self.current_piece.name == "King" and abs(mouse_x-self.current_piece.x_pos) > 100:
                                 self.castle(square, mouse_x)
@@ -165,15 +165,14 @@ class ChessGame:
                     
                     else:
                         mouse_x, mouse_y = pygame.mouse.get_pos()
-                        for piece in self.board.list_of_pieces:
+                        for piece in self.board.l_o_p:
                             if piece.rect.collidepoint(mouse_x, mouse_y):
                                 if piece.color == self.player_turn:
                                     piece.piece_image = pygame.transform.scale(piece.piece_image, (105, 105))
-                                    piece.highlight_moves(self.board.list_of_squares, self.board.list_of_pieces)
+                                    piece.highlight_moves(self.board.l_o_s, self.board.l_o_p)
                                     self.current_piece = piece
-
                                     self.draw_window()
-                                    break                    
+                                    break
 
 
             self.draw_window()
