@@ -3,8 +3,8 @@ from chess_board import ChessBoard
 from chess_board import l_o_s, l_o_p, name_of_squares
 
 
-WHITE = (200,200,200)
-BLACK = (50,50,50)
+WHITE = (220,220,220)
+BLACK = (40,40,40)
 PURPLE = (55,25,255)
 HIGHLIGHT = (55,25,20)
 FPS = 60
@@ -31,6 +31,7 @@ class ChessGame:
         self.current_piece = None
         self.transcript = {}
         self.move = 0
+        self.en_pessent = False
         self.add_boardstate()
         self.player_turn = "w"
 
@@ -53,14 +54,24 @@ class ChessGame:
         #remove the piece from the square
         current_square.remove_piece()
 
+        #If enemy piece on square capture it then place new piece
+        if new_square.current_piece:
+            new_square.capture_piece()
+        new_square.place_piece(piece)
+
         #Update the position of the piece
         piece.rect = pygame.Rect(new_square_coords[0], new_square_coords[1], 100, 100)
         piece.coords = new_square_coords
 
+        if piece.name == "Pawn" and (coords[1]-new_square_coords[1]) in (200,-200):
+            direction = -1 if self.player_turn == "w" else 1
+            en_pessent_square = get_square_at(new_square_coords[0], (new_square_coords[1]+(direction*100)), l_o_s)
+            self.en_pessent = en_pessent_square
+        else:
+            self.en_pessent = False
         #place the piece onto the new square
-        if new_square.current_piece:
-            new_square.capture_piece()
-        new_square.place_piece(piece)
+        print(f"Moving {piece} to {new_square.name}")
+
 
         #Reset selection and redraw the window
         self.reset_selection()
@@ -71,7 +82,7 @@ class ChessGame:
         """indexs the most recent move into the transcript dictionary"""
         current_board = self.board.l_o_s[:]
         self.transcript[f"{self.move}"] = current_board
-        self.move += 1    
+        self.move += 1
 
     def reset_selection(self):
         """Removes highlight from squares and sets self.current piece to none"""
@@ -129,6 +140,16 @@ class ChessGame:
         self.move_piece(sx, sy, self.current_piece)
         self.draw_window()
 
+    def take_en_pessent(self, square):
+        """Places pawn on the passed square and removes the en_pessentable pawn"""
+        sx, sy = name_of_squares[f"{square.name}"]
+        direction = -1 if self.player_turn == "w" else 1
+        square.place_piece(self.current_piece)
+        en_pessent_square = get_square_at(sx, sy+(direction*100),l_o_s)
+        print(square.name)
+        print(en_pessent_square.name)
+        en_pessent_square.capture_piece()
+        self.move_piece(sx, sy, self.current_piece)
 
     def draw_window(self):
         """Draws the squares onto the blank template"""
@@ -152,6 +173,7 @@ class ChessGame:
                     if self.current_piece:
                         mouse_x, mouse_y = pygame.mouse.get_pos()
                         square = get_square_at(mouse_x, mouse_y, self.board.l_o_s)
+                        piece_coords = self.current_piece.coords
                         coords = name_of_squares[f"{square.name}"]
                         if square.color == HIGHLIGHT:
                             #Special case for castling to move 2 pieces at the same time
@@ -163,7 +185,10 @@ class ChessGame:
                             #Special case for promotion
                             elif self.current_piece.name == "Pawn" and coords[1] in (0,700):
                                 self.promotion(square)
-                            
+
+                            #Special case for en_pessent
+                            elif self.en_pessent and self.current_piece.name == "Pawn" and not square.current_piece and coords[0] != piece_coords[0]:
+                                self.take_en_pessent(square)
                             else:
                                 self.move_piece(coords[0], coords[1], self.current_piece)
                         elif square.color != HIGHLIGHT:
@@ -175,7 +200,7 @@ class ChessGame:
                             if piece.rect.collidepoint(mouse_x, mouse_y):
                                 if piece.color == self.player_turn:
                                     piece.image = pygame.transform.scale(piece.image, (105, 105))
-                                    piece.highlight_moves(self.board.l_o_s, self.board.l_o_p)
+                                    piece.highlight_moves(l_o_s, l_o_p, False, self.en_pessent)
                                     self.current_piece = piece
                                     self.draw_window()
                                     break

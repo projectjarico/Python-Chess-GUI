@@ -29,7 +29,6 @@ def get_square_at(x, y, los=l_o_s):
     for square in los:
         if name_of_squares[f"{square.name}"] == (x,y):
             return square
-    print("No square found")
 
 
 def create_board():
@@ -38,18 +37,24 @@ def create_board():
     #3 lists for holding squares pieces and names
     # Naming the squares created below
     files = "abcdefgh"
-    for file in files:
+    reversed_files = files[::-1]
+    for file in reversed_files:
         ranks = list(range(1, 9))
-        ranks.reverse()
         for rank in ranks:
             square_name = f"{file}{rank}"
-            x = (ord(file) - ord('a')) * 100
-            y = (8 - rank) * 100
+            x = (ord("h")- ord(file)) * 100
+            y = (rank - 1) * 100
+            print(square_name, x, y)
             square_color = WHITE if (x + y)/100 % 2 == 0 else BLACK
+            print(f"Filename{file}")
             coords = (x, y)
             name_of_squares[square_name] = coords
             #creates 24 pieces
             #assigns each piece its square then appends all squares and pieces into their list
+            for key, value in name_of_squares.items():
+                if (x,y) == value:
+                    square_name == key
+                    break
             if y == 100:
                 piece_color = "w"
                 new_piece = ChessPiece(x, y, piece_color,"Pawn")
@@ -247,41 +252,45 @@ class ChessPiece:
 
 
 
-    def highlight_moves(self, l_o_s, l_o_p, temp_boardstate = False):
+    def highlight_moves(self, l_o_s, l_o_p, temp_boardstate = False, en_pesent=False):
         """Called when a chess piece is clicked highlight all the legal moves for the piece clicked"""
         dx, dy = self.coords
         if self.name == "Pawn":
             pawn_moves = [(100, 100),(-100, 100)] if self.color == "w" else [(100, -100),(-100, -100)]
             direction = 1 if self.color == "w" else -1
-            # Check if the square in front of the pawn is empty and highlight it
             if temp_boardstate is False:
-                dx, dy = self.coords
-                square = get_square_at(dx, dy + (direction * 100), l_o_s)   
+                #if pawn is on starting square and has not moved highlight 2 squares ahead
+                if dy == 100 or dy == 600 and self.castle:
+                    square = get_square_at(dx, dy + direction * 200, l_o_s)
+                    check = self.test_boardstate(square, l_o_s, l_o_p)
+                    if square and square.current_piece is None and check is not True:
+                            square.color = HIGHLIGHT
+                
+                #Highlight the first square ahead as well
+                square = get_square_at(dx, dy + (direction * 100), l_o_s)
                 check = self.test_boardstate(square, l_o_s, l_o_p)
                 if check is not True and square and square.current_piece is None:
                     square.color = HIGHLIGHT
 
 
-            #Check if the square two steps in front of the pawn is empty and highlight it
-            if temp_boardstate is False:
-                if dy == 100 or dy == 600:
-                    if self.castle:
-                        dx, dy = self.coords
-                        square = get_square_at(dx, dy + direction * 200, l_o_s)
-                        check = self.test_boardstate(square, l_o_s, l_o_p)
-                        if square and square.current_piece is None and check is not True:
-                            square.color = HIGHLIGHT
-
-
             # Check if the diagonally forward squares have opponent's pieces and highlight them
             if temp_boardstate is False:
-                for x, y in pawn_moves:
-                    square = get_square_at(dx+x, dy+y, l_o_s)
-                    if square and square.current_piece and square.current_piece.color != self.color:
-                        check = self.test_boardstate(square, l_o_s, l_o_p)
-                        if check is not True:
-                            square.color = HIGHLIGHT
-
+                if en_pesent is False:
+                    for x, y in pawn_moves:
+                        square = get_square_at(dx+x, dy+y, l_o_s)
+                        if square and square.current_piece and square.current_piece.color != self.color:
+                            check = self.test_boardstate(square, l_o_s, l_o_p)
+                            if check is not True:
+                                square.color = HIGHLIGHT
+                if en_pesent:
+                    print("We in here")
+                    for x, y in pawn_moves:
+                        print(dx+x, dy+y)
+                        en_pesent_coords = name_of_squares[f"{en_pesent.name}"]
+                        print(en_pesent_coords)
+                        square = get_square_at (dx+x, dy+y)
+                        if square and square == en_pesent:
+                            en_pesent.color = HIGHLIGHT
             else:
                 #if enemy move is being considered it hightlights all possible moves
                 square = get_square_at(dx - 100,
