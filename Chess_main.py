@@ -1,12 +1,9 @@
 import pygame
 from chess_board import ChessBoard
 from chess_board import l_o_s, l_o_p, name_of_squares
+from chess_board import BLACK, WHITE, HIGHLIGHT
 
-
-WHITE = (220,220,220)
-BLACK = (40,40,40)
 PURPLE = (55,25,255)
-HIGHLIGHT = (55,25,20)
 FPS = 60
 white_square = pygame.image.load(r"c:\Users\Jack\Chess\white_square.PNG")
 white_square = pygame.transform.scale(white_square,(100,100))
@@ -45,10 +42,10 @@ class ChessGame:
         piece.castle = False
         coords = piece.coords
         #Get the square the piece is currently on
-        current_square = get_square_at(coords[0], coords[1], self.board.l_o_s)
+        current_square = get_square_at(coords[0], coords[1], l_o_s)
 
         #Get the square where the piece is being move to
-        new_square = get_square_at(x_pos, y_pos, self.board.l_o_s)
+        new_square = get_square_at(x_pos, y_pos, l_o_s)
         new_square_coords = name_of_squares[f"{new_square.name}"]
 
         #remove the piece from the square
@@ -58,10 +55,10 @@ class ChessGame:
         if new_square.current_piece:
             new_square.capture_piece()
         new_square.place_piece(piece)
-
-        #Update the position of the piece
-        piece.rect = pygame.Rect(new_square_coords[0], new_square_coords[1], 100, 100)
-        piece.coords = new_square_coords
+        print(f"Moving {piece} to {new_square.name}")
+        for square in l_o_s:
+            if square.name == "d7" and square.current_piece:
+                print(square.current_piece.name)
 
         if piece.name == "Pawn" and (coords[1]-new_square_coords[1]) in (200,-200):
             direction = -1 if self.player_turn == "w" else 1
@@ -69,8 +66,6 @@ class ChessGame:
             self.en_pessent = en_pessent_square
         else:
             self.en_pessent = False
-        #place the piece onto the new square
-        print(f"Moving {piece} to {new_square.name}")
 
 
         #Reset selection and redraw the window
@@ -146,8 +141,6 @@ class ChessGame:
         direction = -1 if self.player_turn == "w" else 1
         square.place_piece(self.current_piece)
         en_pessent_square = get_square_at(sx, sy+(direction*100),l_o_s)
-        print(square.name)
-        print(en_pessent_square.name)
         en_pessent_square.capture_piece()
         self.move_piece(sx, sy, self.current_piece)
 
@@ -164,6 +157,11 @@ class ChessGame:
         """Open the game window"""
         clock = pygame.time.Clock()
         run = True
+
+        for all_squares in l_o_s:
+            print(f"{all_squares.name}, {name_of_squares[f"{all_squares.name}"]}")
+            if all_squares.current_piece:
+                print(all_squares.current_piece.name)
         while run:
             clock.tick(FPS)
             for event in pygame.event.get():
